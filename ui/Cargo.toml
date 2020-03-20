@@ -1,0 +1,33 @@
+[package]
+name = "openbw"
+version = "0.1.0"
+authors = ["Ryan Lee <drdgvhbh@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "openbw"
+path = "src/lib.rs"
+
+[[bin]]
+name = "openbw"
+path = "src/main.rs"
+
+[dependencies]
+sdl2 = "0.33.0"
+starcraft-map = { path = "../starcraft-map" }
+error-chain = "0.12.2"
+byteorder = "1"
+rgb = "0.8"
+image = "0.23.1"
+ceres-mpq = { git = "https://github.com/drdgvhbh/ceres-mpq" }
+stopwatch = "0.0.7"
+serde = "1.0.105"
+rayon = "1.3.0"
+luminance = "0.39.0"
+luminance-glfw = "0.12.1"
+luminance-windowing = "0.8.2"
+luminance-derive = "0.5.3"
+
+[dependencies.gl]
+git = "https://github.com/bjz/gl-rs"

@@ -44,7 +44,7 @@ pub fn generate_bitmap(
             let x3 = i % width % 32 % 8;
             let y3 = i / width % 32 % 8;
             let color = if minitile.is_horizontally_flipped() {
-                &terrain_data.wpe[wpe_ref[63 - (x3 + y3 * 8)]]
+                &terrain_data.wpe[wpe_ref[(7 - x3) + y3 * 8]]
             } else {
                 &terrain_data.wpe[wpe_ref[x3 + y3 * 8]]
             };

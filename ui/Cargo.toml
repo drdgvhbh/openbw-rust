@@ -31,3 +31,6 @@ luminance-derive = "0.5.3"
 
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
+
+[dev-dependencies]
+cargo-watch = "3.2.0"

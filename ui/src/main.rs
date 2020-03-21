@@ -22,8 +22,8 @@ use luminance::pixel::{NormRGB8UI, NormUnsigned};
 use luminance::render_state::RenderState;
 use luminance::shader::program::{Program, Uniform};
 use luminance::tess::{Mode, TessBuilder};
-use luminance::texture::{Dim2, GenMipmaps, Sampler, Texture};
-use luminance_derive::UniformInterface;
+use luminance::texture::{Dim2, GenMipmaps, MagFilter, MinFilter, Sampler, Texture, Wrap};
+use luminance_derive::{Semantics, UniformInterface, Vertex};
 use luminance_glfw::{Action, GlfwSurface, Key, Surface, WindowDim, WindowEvent, WindowOpt};
 
 const VS: &'static str = include_str!("texture-vs.glsl");
@@ -40,6 +40,18 @@ struct UIConfig {
 struct ShaderInterface {
     // the 'static lifetime acts as “anything” here
     tex: Uniform<&'static BoundTexture<'static, Dim2, NormUnsigned>>,
+}
+
+#[derive(Copy, Clone, Debug, Semantics)]
+pub enum VertexSemantics {
+    #[sem(name = "position", repr = "[f32; 2]", wrapper = "VertexPosition")]
+    Position,
+}
+
+#[derive(Vertex)]
+#[vertex(sem = "VertexSemantics")]
+pub struct Vertex {
+    position: VertexPosition,
 }
 
 fn main() {
@@ -93,7 +105,7 @@ fn main() {
     )
     .expect("luminance texture creation");
 
-    tex.upload_raw(GenMipmaps::No, &texels).unwrap();
+    tex.upload_raw(GenMipmaps::Yes, &texels).unwrap();
 
     // set the uniform interface to our type so that we can read textures from the shader
     let program = luminance::shader::program::Program::<(), (), ShaderInterface>::from_strings(
@@ -102,17 +114,32 @@ fn main() {
     .expect("program creation")
     .ignore_warnings();
 
+    const VERTICES: [Vertex; 4] = [
+        Vertex {
+            position: VertexPosition::new([-1., -1.]),
+        },
+        Vertex {
+            position: VertexPosition::new([1., -1.]),
+        },
+        Vertex {
+            position: VertexPosition::new([1., 1.]),
+        },
+        Vertex {
+            position: VertexPosition::new([-1., 1.]),
+        },
+    ];
+
     // we’ll use an attributeless render here to display a quad on the screen (two triangles); there
     // are over ways to cover the whole screen but this is easier for you to understand; the
     // TriangleFan creates triangles by connecting the third (and next) vertex to the first one
     let tess = TessBuilder::new(&mut surface)
-        .set_vertex_nb(4)
+        .add_vertices(VERTICES)
         .set_mode(Mode::TriangleFan)
         .build()
         .unwrap();
 
     let mut back_buffer = surface.back_buffer().unwrap();
-    let render_st =
+    let render_state =
         &RenderState::default().set_blending((Equation::Additive, Factor::SrcAlpha, Factor::Zero));
     let mut resize = false;
 
@@ -147,12 +174,12 @@ fn main() {
                 // bind our fancy texture to the GPU: it gives us a bound texture we can use with the shader
                 let bound_tex = pipeline.bind_texture(&tex);
 
-                shd_gate.shade(&program, |iface, mut rdr_gate| {
+                shd_gate.shade(&program, |program, mut rdr_gate| {
                     // update the texture; strictly speaking, this update doesn’t do much: it just tells the GPU
                     // to use the texture passed as argument (no allocation or copy is performed)
-                    iface.tex.update(&bound_tex);
+                    program.tex.update(&bound_tex);
 
-                    rdr_gate.render(render_st, |mut tess_gate| {
+                    rdr_gate.render(render_state, |mut tess_gate| {
                         // render the tessellation to the surface the regular way and let the vertex shader’s
                         // magic do the rest!
                         tess_gate.render(&tess);

@@ -81,15 +81,18 @@ fn main() {
         (map.dimensions.width * 32) as u32,
         (map.dimensions.height * 32) as u32,
         |x, y| {
-            let c = bitmap[(x + y * (map.dimensions.width as u32 * 32)) as usize];
+            let c = bitmap[(x
+                + (((map.dimensions.height * 32) as u32 - 1) - y)
+                    * (map.dimensions.width as u32 * 32)) as usize];
             image::Rgb([c.r, c.g, c.b])
         },
     );
+
     println!("Overall: Thing took {}ms", sw.elapsed_ms());
     let texels = img.into_raw();
 
     let mut surface = luminance_glfw::GlfwSurface::new(
-        luminance_glfw::WindowDim::Windowed(900, 600),
+        luminance_glfw::WindowDim::Windowed(800, 600),
         "Hello, world!",
         luminance_glfw::WindowOpt::default(),
     )

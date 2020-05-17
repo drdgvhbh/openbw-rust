@@ -3,6 +3,7 @@ pub mod errors {
 }
 
 use ceres_mpq;
+use starcraft_assets;
 use std::fs;
 
 use std::io::{Cursor, Read, Seek};
@@ -68,16 +69,16 @@ where
     }
 }
 
-impl<R> super::assets::mpq::MPQArchive for Archive<R>
+impl<R> starcraft_assets::mpq::MPQArchive for Archive<R>
 where
     R: Read + Seek,
 {
     fn read_file(
         &mut self,
         file_name: &str,
-    ) -> std::result::Result<Vec<u8>, super::assets::mpq::errors::Error> {
-        use super::assets::mpq;
-        use mpq::errors::*;
+    ) -> std::result::Result<Vec<u8>, starcraft_assets::Error> {
+        use starcraft_assets::errors::*;
+        use starcraft_assets::mpq;
 
         Archive::read_file(self, file_name)
             .chain_err(|| format!("failed to read file: {}", file_name))

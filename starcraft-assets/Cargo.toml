@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 error-chain = "0.12.2"
 byteorder = "1"
+rgb = "0.8"
 ceres-mpq = { git = "https://github.com/drdgvhbh/ceres-mpq" }
 num-traits = "0.2"
 num-derive = "0.2"

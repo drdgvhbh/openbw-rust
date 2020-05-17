@@ -1,3 +1,5 @@
+#[macro_use(c)]
+extern crate cute;
 use sdl2;
 
 use sdl2::event::Event;
@@ -65,7 +67,10 @@ fn main() {
             third_party::mpq::Archive::<Cursor<Vec<u8>>>::open("StarDat.mpq").unwrap();
         let broodwar_archive =
             third_party::mpq::Archive::<Cursor<Vec<u8>>>::open("BrooDat.mpq").unwrap();
-        assets::mpq::UnifiedMPQArchive::from_existing(vec![starcraft_archive, broodwar_archive])
+        starcraft_assets::mpq::UnifiedMPQArchive::from_existing(vec![
+            starcraft_archive,
+            broodwar_archive,
+        ])
     };
     let terrain_data = assets::terrain::TerrainData::load(
         assets::terrain::TilesetAssetLoader::new(new_unified_archive),
@@ -78,6 +83,8 @@ fn main() {
     let bitmap =
         openbw::generate_bitmap(&map.dimensions, &map.mega_tile_ids, &terrain_data).unwrap();
     println!("Overall: Thing took {}ms", sw.elapsed_ms());
+    let sw = Stopwatch::start_new();
+
     let img = image::ImageBuffer::from_fn(
         (map.dimensions.width * 32) as u32,
         (map.dimensions.height * 32) as u32,

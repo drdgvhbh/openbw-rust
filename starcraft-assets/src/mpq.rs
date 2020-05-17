@@ -1,13 +1,7 @@
-pub mod errors {
-    error_chain! {
-        errors {
-            IO
-        }
-    }
-}
+use super::errors::*;
 
 pub trait MPQArchive {
-    fn read_file(&mut self, name: &str) -> errors::Result<Vec<u8>>;
+    fn read_file(&mut self, name: &str) -> Result<Vec<u8>>;
 }
 
 pub struct UnifiedMPQArchive<A>
@@ -37,7 +31,7 @@ where
         self.archives.push(archive)
     }
 
-    pub fn read_file(&mut self, file_name: &str) -> errors::Result<Vec<u8>> {
+    pub fn read_file(&mut self, file_name: &str) -> Result<Vec<u8>> {
         for archive in &mut self.archives {
             let result = archive.read_file(file_name);
             if result.is_err() {
@@ -51,15 +45,11 @@ where
     }
 }
 
-impl<A> super::terrain::FileSystem for UnifiedMPQArchive<A>
+impl<A> super::fs::FileSystem for UnifiedMPQArchive<A>
 where
     A: MPQArchive,
 {
-    fn read(
-        &mut self,
-        file_name: &str,
-    ) -> std::result::Result<Vec<u8>, super::terrain::errors::Error> {
-        use super::terrain::errors::*;
+    fn read(&mut self, file_name: &str) -> std::result::Result<Vec<u8>, Error> {
         UnifiedMPQArchive::read_file(self, file_name)
             .chain_err(|| format!("failed to read: {}", file_name))
     }

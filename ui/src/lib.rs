@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate error_chain;
+#[macro_use(c)]
+extern crate cute;
 
 use rgb;
 use starcraft_assets;
@@ -14,8 +16,8 @@ pub mod errors {
 use errors::*;
 
 pub fn generate_bitmap(
-    dimensions: &starcraft_assets::map::Dimensions,
-    megatiles: &Vec<starcraft_assets::map::MegaTileID>,
+    dimensions: &starcraft_assets::chk::Dimensions,
+    megatiles: &Vec<starcraft_assets::chk::MegaTileID>,
     terrain_data: &assets::terrain::TerrainData,
 ) -> Result<Vec<rgb::RGB8>> {
     let width = dimensions.width * 32;
@@ -51,5 +53,6 @@ pub fn generate_bitmap(
 
             color.clone()
         })
+        .map(|x| x.0)
         .collect::<Vec<_>>())
 }

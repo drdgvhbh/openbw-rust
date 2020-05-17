@@ -18,13 +18,15 @@ pub mod errors {
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use rgb;
-use starcraft_assets;
+use starcraft_assets::{vf4::*, wpe::*};
 use std::fmt;
 use std::io::Cursor;
 use std::io::Read;
 use std::mem::MaybeUninit;
 use std::sync::{Arc, Mutex};
 use std::thread;
+
+const MEGA_TILE_REFERENCE_COUNT: usize = 16;
 
 #[derive(Debug, Clone)]
 pub enum Tileset {
@@ -68,17 +70,17 @@ impl fmt::Display for Tileset {
     }
 }
 
-impl From<starcraft_assets::map::Tileset> for Tileset {
-    fn from(tileset: starcraft_assets::map::Tileset) -> Self {
+impl From<starcraft_assets::chk::Tileset> for Tileset {
+    fn from(tileset: starcraft_assets::chk::Tileset) -> Self {
         match tileset {
-            starcraft_assets::map::Tileset::Arctic => Tileset::Arctic,
-            starcraft_assets::map::Tileset::Ashworld => Tileset::Ashworld,
-            starcraft_assets::map::Tileset::Badlands => Tileset::Badlands,
-            starcraft_assets::map::Tileset::Desert => Tileset::Desert,
-            starcraft_assets::map::Tileset::Installation => Tileset::Installation,
-            starcraft_assets::map::Tileset::Jungle => Tileset::Jungle,
-            starcraft_assets::map::Tileset::SpacePlatform => Tileset::SpacePlatform,
-            starcraft_assets::map::Tileset::Twilight => Tileset::Twilight,
+            starcraft_assets::chk::Tileset::Arctic => Tileset::Arctic,
+            starcraft_assets::chk::Tileset::Ashworld => Tileset::Ashworld,
+            starcraft_assets::chk::Tileset::Badlands => Tileset::Badlands,
+            starcraft_assets::chk::Tileset::Desert => Tileset::Desert,
+            starcraft_assets::chk::Tileset::Installation => Tileset::Installation,
+            starcraft_assets::chk::Tileset::Jungle => Tileset::Jungle,
+            starcraft_assets::chk::Tileset::SpacePlatform => Tileset::SpacePlatform,
+            starcraft_assets::chk::Tileset::Twilight => Tileset::Twilight,
         }
     }
 }
@@ -102,10 +104,6 @@ impl EXT {
             EXT::WPE => "wpe".into(),
         }
     }
-}
-
-pub trait FileSystem {
-    fn read(&mut self, file_name: &str) -> Result<Vec<u8>>;
 }
 
 pub const WPE_BLOCK_SIZE: usize = 3;
@@ -134,45 +132,6 @@ impl VX4 {
 }
 
 #[derive(Debug, Clone)]
-pub struct VF4 {
-    value: u16,
-}
-
-const WALKABLE: u16 = 0x0001;
-const MID: u16 = 0x0002;
-const HIGH: u16 = 0x0004;
-const LOW: u16 = 0x0004 | 0x0002;
-const BLOCKS_VIEW: u16 = 0x0008;
-const RAMP: u16 = 0x0010;
-const MEGA_TILE_REFERENCE_COUNT: usize = 16;
-
-impl VF4 {
-    pub fn is_walkable(&self) -> bool {
-        return self.value & WALKABLE == WALKABLE;
-    }
-
-    pub fn is_elevation_mid(&self) -> bool {
-        return self.value & MID == MID;
-    }
-
-    pub fn is_elevation_high(&self) -> bool {
-        return self.value & HIGH == HIGH;
-    }
-
-    pub fn is_elevation_low(&self) -> bool {
-        return self.value & LOW == LOW;
-    }
-
-    pub fn blocks_view(&self) -> bool {
-        return self.value & BLOCKS_VIEW == BLOCKS_VIEW;
-    }
-
-    pub fn is_ramp(&self) -> bool {
-        return self.value & RAMP == RAMP;
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct CV5 {
     pub megatile_references: [usize; MEGA_TILE_REFERENCE_COUNT],
 }
@@ -180,14 +139,14 @@ pub struct CV5 {
 #[derive(Debug)]
 pub struct TilesetAssetLoader<FS>
 where
-    FS: FileSystem,
+    FS: starcraft_assets::fs::FileSystem,
 {
     new_fs: fn() -> FS,
 }
 
 impl<FS> TilesetAssetLoader<FS>
 where
-    FS: FileSystem,
+    FS: starcraft_assets::fs::FileSystem,
 {
     pub fn new(new_fs: fn() -> FS) -> TilesetAssetLoader<FS> {
         TilesetAssetLoader { new_fs: new_fs }
@@ -223,7 +182,7 @@ where
         Ok(())
     }
 
-    pub fn load_vf4(&self, out: &mut Vec<[VF4; VF4_BLOCK_SIZE]>, tileset: Tileset) -> Result<()> {
+    pub fn load_vf4(&self, tileset: Tileset) -> Result<Vec<[VF4; 16]>> {
         let mut fs = (self.new_fs)();
         let file_path = &tileset_path(&EXT::VF4, &tileset);
         let src = fs
@@ -232,23 +191,7 @@ where
 
         let mut cursor = Cursor::new(&src);
 
-        let size = src.len() / (VF4_BLOCK_SIZE * std::mem::size_of::<u16>()) as usize;
-        out.resize(size, unsafe { MaybeUninit::uninit().assume_init() });
-        let mut out_bytes: [u16; VF4_BLOCK_SIZE] = unsafe { MaybeUninit::uninit().assume_init() };
-        for i in 0..size {
-            cursor
-                .read_u16_into::<LittleEndian>(&mut out_bytes)
-                .chain_err(|| {
-                    ErrorKind::IncorrectFileFormat(cursor.position(), file_path.to_string())
-                })?;
-            for j in 0..VF4_BLOCK_SIZE {
-                out[i][j] = VF4 {
-                    value: out_bytes[j],
-                }
-            }
-        }
-
-        Ok(())
+        VF4::from_buffer(&mut cursor).chain_err(|| "failed to load vf4")
     }
 
     pub fn load_vx4(&self, out: &mut Vec<[VX4; VX4_BLOCK_SIZE]>, tileset: Tileset) -> Result<()> {
@@ -303,7 +246,7 @@ where
         Ok(())
     }
 
-    pub fn load_wpe(&self, out: &mut Vec<rgb::RGB8>, tileset: Tileset) -> Result<()> {
+    pub fn load_wpe(&self, tileset: Tileset) -> Result<Vec<WPE>> {
         let mut fs = (self.new_fs)();
         let file_path = &tileset_path(&EXT::WPE, &tileset);
         let src = fs
@@ -311,22 +254,7 @@ where
             .map_err(|_| ErrorKind::AssetNotFound(tileset.file_name(), EXT::WPE.file_name()))?;
         let mut cursor = Cursor::new(&src);
 
-        let size = src.len() / (WPE_BLOCK_SIZE + 1) as usize;
-        out.resize(size, unsafe { MaybeUninit::uninit().assume_init() });
-        let mut out_bytes: [u8; WPE_BLOCK_SIZE] = unsafe { MaybeUninit::uninit().assume_init() };
-        for i in 0..size {
-            cursor.read(&mut out_bytes).chain_err(|| {
-                ErrorKind::IncorrectFileFormat(cursor.position(), file_path.to_string())
-            })?;
-            cursor.set_position(cursor.position() + 1);
-            out[i] = rgb::RGB8 {
-                r: out_bytes[0],
-                g: out_bytes[1],
-                b: out_bytes[2],
-            }
-        }
-
-        Ok(())
+        WPE::from_buffer(&mut cursor).chain_err(|| "failed to load wpe")
     }
 }
 
@@ -336,13 +264,13 @@ pub struct TerrainData {
     pub vf4: Vec<[VF4; VF4_BLOCK_SIZE]>,
     pub vx4: Vec<[VX4; VX4_BLOCK_SIZE]>,
     pub vr4: Vec<[usize; VR4_BLOCK_SIZE]>,
-    pub wpe: Vec<rgb::RGB8>,
+    pub wpe: Vec<WPE>,
 }
 
 impl TerrainData {
     pub fn load<FS>(loader: TilesetAssetLoader<FS>, tileset: Tileset) -> Result<TerrainData>
     where
-        FS: FileSystem + 'static,
+        FS: starcraft_assets::fs::FileSystem + 'static,
     {
         let terrain_data = Arc::new(Mutex::new(TerrainData {
             cv5: Vec::new(),
@@ -371,10 +299,7 @@ impl TerrainData {
                     let terrain_data_clone = terrain_data.clone();
                     let scenario_type_clone = tileset.clone();
                     threads.push(thread::spawn(move || {
-                        let mut vf4 = Vec::new();
-                        loader_clone
-                            .load_vf4(&mut vf4, scenario_type_clone)
-                            .unwrap();
+                        let mut vf4 = loader_clone.load_vf4(scenario_type_clone).unwrap();
                         terrain_data_clone.lock().unwrap().vf4 = vf4;
                     }));
                 }
@@ -404,10 +329,7 @@ impl TerrainData {
                     let terrain_data_clone = terrain_data.clone();
                     let scenario_type_clone = tileset.clone();
                     threads.push(thread::spawn(move || {
-                        let mut wpe = Vec::new();
-                        loader_clone
-                            .load_wpe(&mut wpe, scenario_type_clone)
-                            .unwrap();
+                        let mut wpe = loader_clone.load_wpe(scenario_type_clone).unwrap();
                         terrain_data_clone.lock().unwrap().wpe = wpe;
                     }));
                 }

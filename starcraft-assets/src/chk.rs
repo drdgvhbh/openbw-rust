@@ -1,4 +1,4 @@
-use super::super::errors::*;
+use super::errors::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;

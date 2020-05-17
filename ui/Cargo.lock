@@ -203,6 +203,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cute"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45e700c2d1c3feea9b695e79b2dfeeb93040556a58c556fae23f71b1e6b449fd"
+
+[[package]]
 name = "deflate"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -841,6 +847,7 @@ dependencies = [
  "byteorder",
  "cargo-watch",
  "ceres-mpq",
+ "cute",
  "error-chain",
  "gl 0.14.0 (git+https://github.com/bjz/gl-rs)",
  "image",
@@ -1142,6 +1149,7 @@ dependencies = [
  "error-chain",
  "num-derive",
  "num-traits",
+ "rgb",
 ]
 
 [[package]]

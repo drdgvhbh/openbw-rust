@@ -1,8 +1,7 @@
 use ceres_mpq;
 use std::io::{Cursor, Read};
 
-mod chk;
-pub use chk::*;
+pub use super::chk;
 
 use super::errors::*;
 

@@ -257,6 +257,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rgb"
+version = "0.8.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a85b83fd629b0ce765f45316774fa6aaa95947fd74c8e4bbf3c6d1e349701d95"
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -282,6 +288,7 @@ dependencies = [
  "error-chain",
  "num-derive",
  "num-traits",
+ "rgb",
 ]
 
 [[package]]

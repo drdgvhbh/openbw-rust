@@ -18,7 +18,7 @@ pub mod errors {
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 use rgb;
-use starcraft_map;
+use starcraft_assets;
 use std::fmt;
 use std::io::Cursor;
 use std::io::Read;
@@ -68,17 +68,17 @@ impl fmt::Display for Tileset {
     }
 }
 
-impl From<starcraft_map::Tileset> for Tileset {
-    fn from(tileset: starcraft_map::Tileset) -> Self {
+impl From<starcraft_assets::map::Tileset> for Tileset {
+    fn from(tileset: starcraft_assets::map::Tileset) -> Self {
         match tileset {
-            starcraft_map::Tileset::Arctic => Tileset::Arctic,
-            starcraft_map::Tileset::Ashworld => Tileset::Ashworld,
-            starcraft_map::Tileset::Badlands => Tileset::Badlands,
-            starcraft_map::Tileset::Desert => Tileset::Desert,
-            starcraft_map::Tileset::Installation => Tileset::Installation,
-            starcraft_map::Tileset::Jungle => Tileset::Jungle,
-            starcraft_map::Tileset::SpacePlatform => Tileset::SpacePlatform,
-            starcraft_map::Tileset::Twilight => Tileset::Twilight,
+            starcraft_assets::map::Tileset::Arctic => Tileset::Arctic,
+            starcraft_assets::map::Tileset::Ashworld => Tileset::Ashworld,
+            starcraft_assets::map::Tileset::Badlands => Tileset::Badlands,
+            starcraft_assets::map::Tileset::Desert => Tileset::Desert,
+            starcraft_assets::map::Tileset::Installation => Tileset::Installation,
+            starcraft_assets::map::Tileset::Jungle => Tileset::Jungle,
+            starcraft_assets::map::Tileset::SpacePlatform => Tileset::SpacePlatform,
+            starcraft_assets::map::Tileset::Twilight => Tileset::Twilight,
         }
     }
 }

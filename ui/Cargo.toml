@@ -15,7 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 sdl2 = "0.33.0"
-starcraft-map = { path = "../starcraft-map" }
+starcraft-assets = { path = "../starcraft-assets" }
 error-chain = "0.12.2"
 byteorder = "1"
 rgb = "0.8"

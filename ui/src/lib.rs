@@ -2,7 +2,7 @@
 extern crate error_chain;
 
 use rgb;
-use starcraft_map;
+use starcraft_assets;
 use std::mem::MaybeUninit;
 
 pub mod assets;
@@ -14,8 +14,8 @@ pub mod errors {
 use errors::*;
 
 pub fn generate_bitmap(
-    dimensions: &starcraft_map::Dimensions,
-    megatiles: &Vec<starcraft_map::MegaTileID>,
+    dimensions: &starcraft_assets::map::Dimensions,
+    megatiles: &Vec<starcraft_assets::map::MegaTileID>,
     terrain_data: &assets::terrain::TerrainData,
 ) -> Result<Vec<rgb::RGB8>> {
     let width = dimensions.width * 32;

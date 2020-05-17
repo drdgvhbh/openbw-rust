@@ -4,7 +4,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::video::GLProfile;
 
-use starcraft_map;
+use starcraft_assets;
 use std::thread;
 
 use std::io::Cursor;
@@ -58,7 +58,7 @@ fn main() {
     use stopwatch::Stopwatch;
     let sw = Stopwatch::start_new();
 
-    let map = starcraft_map::Map::from_mpq_file("(2)Heartbreak Ridge.scx").unwrap();
+    let map = starcraft_assets::map::Map::from_mpq_file("(2)Destination.scx").unwrap();
 
     let new_unified_archive = || {
         let starcraft_archive =
@@ -75,7 +75,8 @@ fn main() {
 
     println!("Overall: Thing took {}ms", sw.elapsed_ms());
     let sw = Stopwatch::start_new();
-    let bitmap = openbw::generate_bitmap(&map.dimensions, &map.megatiles, &terrain_data).unwrap();
+    let bitmap =
+        openbw::generate_bitmap(&map.dimensions, &map.mega_tile_ids, &terrain_data).unwrap();
     println!("Overall: Thing took {}ms", sw.elapsed_ms());
     let img = image::ImageBuffer::from_fn(
         (map.dimensions.width * 32) as u32,

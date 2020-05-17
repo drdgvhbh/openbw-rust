@@ -852,7 +852,7 @@ dependencies = [
  "rgb",
  "sdl2",
  "serde",
- "starcraft-map",
+ "starcraft-assets",
  "stopwatch",
 ]
 
@@ -1134,7 +1134,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 
 [[package]]
-name = "starcraft-map"
+name = "starcraft-assets"
 version = "0.1.0"
 dependencies = [
  "byteorder",

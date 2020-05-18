@@ -1,32 +1,26 @@
 #[macro_use(c)]
 extern crate cute;
-use sdl2;
-
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::video::GLProfile;
 
 use starcraft_assets;
-use std::thread;
 
 use std::io::Cursor;
+use std::sync::Arc;
 
-use openbw::{self, assets, third_party};
+use openbw::{self, third_party};
 
 use image;
 use luminance;
-use rgb;
 
 use luminance::blending::{Equation, Factor};
 use luminance::context::GraphicsContext as _;
 use luminance::pipeline::{BoundTexture, PipelineState};
 use luminance::pixel::{NormRGB8UI, NormUnsigned};
 use luminance::render_state::RenderState;
-use luminance::shader::program::{Program, Uniform};
+use luminance::shader::program::Uniform;
 use luminance::tess::{Mode, TessBuilder};
-use luminance::texture::{Dim2, GenMipmaps, MagFilter, MinFilter, Sampler, Texture, Wrap};
+use luminance::texture::{Dim2, GenMipmaps, Texture};
 use luminance_derive::{Semantics, UniformInterface, Vertex};
-use luminance_glfw::{Action, GlfwSurface, Key, Surface, WindowDim, WindowEvent, WindowOpt};
+use luminance_glfw::{Action, Key, Surface, WindowEvent};
 
 const VS: &'static str = include_str!("texture-vs.glsl");
 const FS: &'static str = include_str!("texture-fs.glsl");
@@ -62,26 +56,20 @@ fn main() {
 
     let map = starcraft_assets::map::Map::from_mpq_file("(2)Destination.scx").unwrap();
 
-    let new_unified_archive = || {
-        let starcraft_archive =
-            third_party::mpq::Archive::<Cursor<Vec<u8>>>::open("StarDat.mpq").unwrap();
-        let broodwar_archive =
-            third_party::mpq::Archive::<Cursor<Vec<u8>>>::open("BrooDat.mpq").unwrap();
-        starcraft_assets::mpq::UnifiedMPQArchive::from_existing(vec![
-            starcraft_archive,
-            broodwar_archive,
-        ])
-    };
-    let terrain_data = assets::terrain::TerrainData::load(
-        assets::terrain::TilesetAssetLoader::new(new_unified_archive),
+    let unified_mpq_archive = starcraft_assets::mpq::UnifiedMPQArchive::from_existing(vec![
+        third_party::mpq::ReadonlyArchive::<Cursor<Vec<u8>>>::open("StarDat.mpq").unwrap(),
+        third_party::mpq::ReadonlyArchive::<Cursor<Vec<u8>>>::open("BrooDat.mpq").unwrap(),
+    ]);
+
+    let asset_loader = starcraft_assets::loader::AssetLoader::new(
         map.tileset.clone().into(),
-    )
-    .unwrap();
+        &unified_mpq_archive,
+    );
+    let assets = starcraft_assets::Assets::from(Arc::new(asset_loader)).unwrap();
 
     println!("Overall: Thing took {}ms", sw.elapsed_ms());
     let sw = Stopwatch::start_new();
-    let bitmap =
-        openbw::generate_bitmap(&map.dimensions, &map.mega_tile_ids, &terrain_data).unwrap();
+    let bitmap = openbw::ui::generate_bitmap(&map.dimensions, &map.mega_tile_ids, &assets).unwrap();
     println!("Overall: Thing took {}ms", sw.elapsed_ms());
     let sw = Stopwatch::start_new();
 

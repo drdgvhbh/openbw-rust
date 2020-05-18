@@ -3,33 +3,37 @@ use rgb;
 use std::io::{Cursor, Read};
 use std::mem::MaybeUninit;
 
+/// 256-color RGB Palette.
 #[derive(Debug, Clone)]
 pub struct WPE(pub rgb::RGB8);
 
-impl WPE {
+#[derive(Debug, Clone)]
+pub struct WPEs(pub Vec<WPE>);
+
+impl WPEs {
     const BLOCK_SIZE: usize = 3;
 
-    pub fn from_buffer(cursor: &mut Cursor<&Vec<u8>>) -> Result<Vec<WPE>> {
+    pub fn from_buffer(cursor: &mut Cursor<&Vec<u8>>) -> Result<WPEs> {
         let buf_size = cursor.get_ref().len();
-        let out_size = buf_size / (WPE::BLOCK_SIZE + 1);
+        let out_size = buf_size / (WPEs::BLOCK_SIZE + 1);
+
         let mut colors = Vec::with_capacity(out_size);
+        colors.resize(out_size, unsafe { MaybeUninit::uninit().assume_init() });
 
-        let mut buf = Vec::with_capacity(buf_size);
-        buf.resize(buf_size, unsafe { MaybeUninit::uninit().assume_init() });
-        cursor
-            .read(&mut buf)
-            .chain_err(|| format!("failed to read wpe bytes",))?;
-
-        let mut alpha_offset = 0;
+        let mut out_bytes: [u8; WPEs::BLOCK_SIZE] = unsafe { MaybeUninit::uninit().assume_init() };
         for i in 0..out_size {
-            colors.push(WPE(rgb::RGB8 {
-                r: buf[i * 3 + alpha_offset],
-                g: buf[i * 3 + 1 + alpha_offset],
-                b: buf[i * 3 + 2 + alpha_offset],
-            }));
-            alpha_offset += 1;
+            let previous_position = cursor.position();
+            cursor
+                .read(&mut out_bytes)
+                .chain_err(|| format!("failed to read wpe at position: '{}'", previous_position))?;
+            cursor.set_position(cursor.position() + 1);
+            colors[i] = WPE(rgb::RGB8 {
+                r: out_bytes[0],
+                g: out_bytes[1],
+                b: out_bytes[2],
+            })
         }
 
-        return Ok(colors);
+        return Ok(WPEs(colors));
     }
 }

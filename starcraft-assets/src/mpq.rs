@@ -1,7 +1,7 @@
 use super::errors::*;
 
 pub trait MPQArchive {
-    fn read_file(&mut self, name: &str) -> Result<Vec<u8>>;
+    fn read_file(&self, name: &str) -> Result<Vec<u8>>;
 }
 
 pub struct UnifiedMPQArchive<A>
@@ -31,8 +31,8 @@ where
         self.archives.push(archive)
     }
 
-    pub fn read_file(&mut self, file_name: &str) -> Result<Vec<u8>> {
-        for archive in &mut self.archives {
+    pub fn read_file(&self, file_name: &str) -> Result<Vec<u8>> {
+        for archive in &self.archives {
             let result = archive.read_file(file_name);
             if result.is_err() {
                 continue;
@@ -45,11 +45,11 @@ where
     }
 }
 
-impl<A> super::fs::FileSystem for UnifiedMPQArchive<A>
+impl<A> super::fs::ReadonlyFileSystem for UnifiedMPQArchive<A>
 where
-    A: MPQArchive,
+    A: MPQArchive + Sync + Send,
 {
-    fn read(&mut self, file_name: &str) -> std::result::Result<Vec<u8>, Error> {
+    fn read(&self, file_name: &str) -> std::result::Result<Vec<u8>, Error> {
         UnifiedMPQArchive::read_file(self, file_name)
             .chain_err(|| format!("failed to read: {}", file_name))
     }

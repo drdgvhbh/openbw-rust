@@ -1,5 +1,5 @@
 use super::errors::*;
 
-pub trait FileSystem {
-    fn read(&mut self, file_name: &str) -> Result<Vec<u8>>;
+pub trait ReadonlyFileSystem: Send + Sync {
+    fn read(&self, file_name: &str) -> Result<Vec<u8>>;
 }

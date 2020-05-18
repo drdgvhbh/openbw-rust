@@ -30,6 +30,7 @@ luminance-windowing = "0.8.2"
 luminance-derive = "0.5.3"
 cute = "0.3.0"
 
+
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
 

@@ -5,7 +5,7 @@ use std::mem::MaybeUninit;
 
 /// 256-color RGB Palette.
 #[derive(Debug, Clone)]
-pub struct WPE(pub rgb::RGB8);
+pub struct WPE(pub [u8; WPEs::BLOCK_SIZE]);
 
 #[derive(Debug, Clone)]
 pub struct WPEs(pub Vec<WPE>);
@@ -27,11 +27,7 @@ impl WPEs {
                 .read(&mut out_bytes)
                 .chain_err(|| format!("failed to read wpe at position: '{}'", previous_position))?;
             cursor.set_position(cursor.position() + 1);
-            colors[i] = WPE(rgb::RGB8 {
-                r: out_bytes[0],
-                g: out_bytes[1],
-                b: out_bytes[2],
-            })
+            colors[i] = WPE([out_bytes[0], out_bytes[1], out_bytes[2]])
         }
 
         return Ok(WPEs(colors));

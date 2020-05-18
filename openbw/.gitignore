@@ -176,3 +176,6 @@ $RECYCLE.BIN/
 *.mpq
 
 derp.*
+libmemory_profiler.so
+memory-profiler-cli
+*.dat

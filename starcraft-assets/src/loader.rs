@@ -82,11 +82,11 @@ impl EXT {
 
 pub struct AssetLoader<'a> {
     pub tileset: Tileset,
-    pub fs: &'a dyn super::fs::ReadonlyFileSystem,
+    pub fs: &'a dyn super::fs::ReadOnlyFileSystem,
 }
 
 impl<'a> AssetLoader<'a> {
-    pub fn new(tileset: Tileset, fs: &'a dyn super::fs::ReadonlyFileSystem) -> AssetLoader {
+    pub fn new(tileset: Tileset, fs: &'a dyn super::fs::ReadOnlyFileSystem) -> AssetLoader {
         AssetLoader { tileset, fs }
     }
 

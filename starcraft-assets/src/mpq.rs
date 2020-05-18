@@ -1,19 +1,19 @@
 use super::errors::*;
 
-pub trait MPQArchive {
+pub trait ReadOnlyMPQArchive {
     fn read_file(&self, name: &str) -> Result<Vec<u8>>;
 }
 
 pub struct UnifiedMPQArchive<A>
 where
-    A: MPQArchive,
+    A: ReadOnlyMPQArchive,
 {
     archives: Vec<A>,
 }
 
 impl<A> UnifiedMPQArchive<A>
 where
-    A: MPQArchive,
+    A: ReadOnlyMPQArchive,
 {
     pub fn new() -> UnifiedMPQArchive<A> {
         UnifiedMPQArchive {
@@ -45,9 +45,9 @@ where
     }
 }
 
-impl<A> super::fs::ReadonlyFileSystem for UnifiedMPQArchive<A>
+impl<A> super::fs::ReadOnlyFileSystem for UnifiedMPQArchive<A>
 where
-    A: MPQArchive + Sync + Send,
+    A: ReadOnlyMPQArchive + Sync + Send,
 {
     fn read(&self, file_name: &str) -> std::result::Result<Vec<u8>, Error> {
         UnifiedMPQArchive::read_file(self, file_name)

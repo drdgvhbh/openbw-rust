@@ -57,8 +57,8 @@ fn main() {
     let map = starcraft_assets::map::Map::from_mpq_file("(2)Destination.scx").unwrap();
 
     let unified_mpq_archive = starcraft_assets::mpq::UnifiedMPQArchive::from_existing(vec![
-        third_party::mpq::ReadonlyArchive::<Cursor<Vec<u8>>>::open("StarDat.mpq").unwrap(),
-        third_party::mpq::ReadonlyArchive::<Cursor<Vec<u8>>>::open("BrooDat.mpq").unwrap(),
+        third_party::mpq::ReadonlyArchive::open("StarDat.mpq").unwrap(),
+        third_party::mpq::ReadonlyArchive::open("BrooDat.mpq").unwrap(),
     ]);
 
     let asset_loader = starcraft_assets::loader::AssetLoader::new(
@@ -68,28 +68,10 @@ fn main() {
     let assets = starcraft_assets::Assets::from(Arc::new(asset_loader)).unwrap();
 
     println!("Overall: Thing took {}ms", sw.elapsed_ms());
-    let sw = Stopwatch::start_new();
-    let bitmap = openbw::ui::generate_bitmap(&map.dimensions, &map.mega_tile_ids, &assets).unwrap();
-    println!("Overall: Thing took {}ms", sw.elapsed_ms());
-    let sw = Stopwatch::start_new();
-
-    let img = image::ImageBuffer::from_fn(
-        (map.dimensions.width * 32) as u32,
-        (map.dimensions.height * 32) as u32,
-        |x, y| {
-            let c = bitmap[(x
-                + (((map.dimensions.height * 32) as u32 - 1) - y)
-                    * (map.dimensions.width as u32 * 32)) as usize];
-            image::Rgb([c.r, c.g, c.b])
-        },
-    );
-
-    println!("Overall: Thing took {}ms", sw.elapsed_ms());
-    let texels = img.into_raw();
 
     let mut surface = luminance_glfw::GlfwSurface::new(
         luminance_glfw::WindowDim::Windowed(800, 600),
-        "Hello, world!",
+        "Open BW",
         luminance_glfw::WindowOpt::default(),
     )
     .expect("GLFW surface creation");
@@ -104,7 +86,31 @@ fn main() {
     )
     .expect("luminance texture creation");
 
-    tex.upload_raw(GenMipmaps::Yes, &texels).unwrap();
+    let sw = Stopwatch::start_new();
+
+    tex.upload_raw(
+        GenMipmaps::Yes,
+        openbw::ui::generate_bitmap(&map.dimensions, &map.mega_tile_ids, &assets)
+            .map(|bitmap| {
+                image::ImageBuffer::from_fn(
+                    (map.dimensions.width * 32) as u32,
+                    (map.dimensions.height * 32) as u32,
+                    |x, y| {
+                        let c = bitmap[(x
+                            + (((map.dimensions.height * 32) as u32 - 1) - y)
+                                * (map.dimensions.width as u32 * 32))
+                            as usize];
+                        image::Rgb(c)
+                    },
+                )
+            })
+            .unwrap()
+            .into_raw()
+            .as_slice(),
+    )
+    .unwrap();
+
+    println!("Overall: Thing took {}ms", sw.elapsed_ms());
 
     // set the uniform interface to our type so that we can read textures from the shader
     let program = luminance::shader::program::Program::<(), (), ShaderInterface>::from_strings(

@@ -5,38 +5,28 @@ pub mod errors {
 use ceres_mpq;
 use starcraft_assets;
 use std::fs::File;
+use std::sync::Arc;
 
 use std::io::{Cursor, Read, Seek};
 
 #[derive(Debug)]
-pub struct ReadonlyArchive<R>
-where
-    R: Read + Seek,
-{
-    archive: ceres_mpq::ReadonlyArchive<R>,
+pub struct ReadonlyArchive {
+    archive: ceres_mpq::ReadonlyArchive,
 }
 
-impl<R> ReadonlyArchive<R>
-where
-    R: Read + Seek + Clone,
-{
-    pub fn new(archive: ceres_mpq::ReadonlyArchive<R>) -> ReadonlyArchive<R> {
+impl ReadonlyArchive {
+    pub fn new(archive: ceres_mpq::ReadonlyArchive) -> ReadonlyArchive {
         ReadonlyArchive { archive: archive }
     }
 
-    pub fn open(file_name: &str) -> errors::Result<ReadonlyArchive<Cursor<Vec<u8>>>> {
+    pub fn open(file_name: &str) -> errors::Result<ReadonlyArchive> {
         use errors::*;
 
-        let mut archive_file = File::with_options()
-            .read(true)
-            .open(file_name)
-            .chain_err(|| format!("failed to open archive file: {}", file_name))?;
-        let mut buf: Vec<u8> = Vec::new();
-        archive_file
-            .read_to_end(&mut buf)
-            .chain_err(|| format!("failed to read archive file: {}", file_name))?;
+        let file_handle_factory = ceres_mpq::FileHandleFactory {
+            file_name: file_name.into(),
+        };
 
-        let archive = ceres_mpq::ReadonlyArchive::open(Cursor::new(buf))
+        let archive = ceres_mpq::ReadonlyArchive::open(file_handle_factory)
             .chain_err(|| "failed to open archive")?;
 
         Ok(ReadonlyArchive { archive: archive })
@@ -57,16 +47,9 @@ where
     pub fn size(&self) -> u64 {
         self.archive.size()
     }
-
-    pub fn reader(&mut self) -> &mut R {
-        self.archive.reader()
-    }
 }
 
-impl<R> starcraft_assets::mpq::MPQArchive for ReadonlyArchive<R>
-where
-    R: Read + Seek + Clone,
-{
+impl starcraft_assets::mpq::ReadOnlyMPQArchive for ReadonlyArchive {
     fn read_file(&self, file_name: &str) -> std::result::Result<Vec<u8>, starcraft_assets::Error> {
         use starcraft_assets::errors::*;
 

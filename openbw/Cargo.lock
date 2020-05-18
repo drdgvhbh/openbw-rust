@@ -113,7 +113,7 @@ checksum = "404b1fe4f65288577753b17e3b36a04596ee784493ec249bf81c7f2d2acd751c"
 [[package]]
 name = "ceres-mpq"
 version = "0.1.10-alpha.0"
-source = "git+https://github.com/drdgvhbh/ceres-mpq#4efeca74aa29fb91f51a5dcbecbea3730830e41b"
+source = "git+https://github.com/drdgvhbh/ceres-mpq#1b95f9c050c1aa2c0ce7ab6f792b1923b6dee93f"
 dependencies = [
  "byte-slice-cast",
  "byteorder",

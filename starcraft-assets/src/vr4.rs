@@ -1,11 +1,26 @@
 use super::errors::*;
 use std::io::{Cursor, Read};
 use std::mem::MaybeUninit;
+use std::ops::{Index, IndexMut};
 
 pub type VR4 = [usize; VR4s::BLOCK_SIZE];
 
 #[derive(Clone)]
 pub struct VR4s(pub Vec<VR4>);
+
+impl Index<usize> for VR4s {
+    type Output = VR4;
+
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.0[i]
+    }
+}
+
+impl IndexMut<usize> for VR4s {
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.0[i]
+    }
+}
 
 impl VR4s {
     pub const BLOCK_SIZE: usize = 64;

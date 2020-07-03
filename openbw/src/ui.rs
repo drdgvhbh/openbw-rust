@@ -22,19 +22,19 @@ pub fn generate_bitmap(
             let y = i / width / 32;
 
             let megatile = &megatiles[x + y * dimensions.width];
-            let megatile_id = assets.cv5s.0[megatile.group_index()].0[megatile.subtile_index()];
+            let megatile_id = assets.cv5s[megatile.group_index()][megatile.subtile_index()];
 
             let x2 = i % width % 32 / 8;
             let y2 = i / width % 32 / 8;
-            let minitile = &assets.vx4s.0[megatile_id][x2 + y2 * 4];
-            let wpe_ref = &assets.vr4s.0[minitile.index()];
+            let minitile = &assets.vx4s[megatile_id][x2 + y2 * 4];
+            let wpe_ref = &assets.vr4s[minitile.index()];
 
             let x3 = i % width % 32 % 8;
             let y3 = i / width % 32 % 8;
             let color = if minitile.is_horizontally_flipped() {
-                &assets.wpes.0[wpe_ref[(7 - x3) + y3 * 8]]
+                &assets.wpes[wpe_ref[(7 - x3) + y3 * 8]]
             } else {
-                &assets.wpes.0[wpe_ref[x3 + y3 * 8]]
+                &assets.wpes[wpe_ref[x3 + y3 * 8]]
             };
 
             color

@@ -1,7 +1,7 @@
 use super::errors::*;
-use rgb;
 use std::io::{Cursor, Read};
 use std::mem::MaybeUninit;
+use std::ops::{Index, IndexMut};
 
 /// 256-color RGB Palette.
 #[derive(Debug, Clone)]
@@ -9,6 +9,20 @@ pub struct WPE(pub [u8; WPEs::BLOCK_SIZE]);
 
 #[derive(Debug, Clone)]
 pub struct WPEs(pub Vec<WPE>);
+
+impl Index<usize> for WPEs {
+    type Output = WPE;
+
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.0[i]
+    }
+}
+
+impl IndexMut<usize> for WPEs {
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.0[i]
+    }
+}
 
 impl WPEs {
     const BLOCK_SIZE: usize = 3;

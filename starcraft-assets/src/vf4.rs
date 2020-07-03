@@ -2,6 +2,7 @@ use super::errors::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::io::Cursor;
 use std::mem::{size_of, MaybeUninit};
+use std::ops::{Index, IndexMut};
 
 /// MiniTile graphic references for each MegaTile. Referenced by CV5.
 #[derive(Debug, Clone)]
@@ -11,6 +12,20 @@ pub struct VF4 {
 
 #[derive(Debug, Clone)]
 pub struct VF4s(pub Vec<[VF4; VF4s::BLOCK_SIZE]>);
+
+impl Index<usize> for VF4s {
+    type Output = [VF4; VF4s::BLOCK_SIZE];
+
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.0[i]
+    }
+}
+
+impl IndexMut<usize> for VF4s {
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.0[i]
+    }
+}
 
 impl VF4 {
     const WALKABLE: u16 = 0x0001;

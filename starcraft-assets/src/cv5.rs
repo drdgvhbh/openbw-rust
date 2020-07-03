@@ -2,16 +2,45 @@ use super::errors::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::io::Cursor;
 use std::mem::MaybeUninit;
+use std::ops::{Index, IndexMut};
 
 /// A List of MegaTile references
 #[derive(Debug, Clone)]
 pub struct CV5(pub [usize; CV5::MEGA_TILE_REFERENCE_COUNT]);
+
+impl Index<usize> for CV5 {
+    type Output = usize;
+
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.0[i]
+    }
+}
+
+impl IndexMut<usize> for CV5 {
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.0[i]
+    }
+}
 
 impl CV5 {
     const MEGA_TILE_REFERENCE_COUNT: usize = 16;
 }
 
 pub struct CV5s(pub Vec<CV5>);
+
+impl Index<usize> for CV5s {
+    type Output = CV5;
+
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.0[i]
+    }
+}
+
+impl IndexMut<usize> for CV5s {
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.0[i]
+    }
+}
 
 impl CV5s {
     const BLOCK_SIZE: usize = 52;

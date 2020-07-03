@@ -2,6 +2,7 @@ use super::errors::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::io::Cursor;
 use std::mem::MaybeUninit;
+use std::ops::{Index, IndexMut};
 
 #[derive(Debug, Clone)]
 pub struct VX4 {
@@ -20,6 +21,20 @@ impl VX4 {
 
 #[derive(Debug, Clone)]
 pub struct VX4s(pub Vec<[VX4; VX4s::BLOCK_SIZE]>);
+
+impl Index<usize> for VX4s {
+    type Output = [VX4; VX4s::BLOCK_SIZE];
+
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.0[i]
+    }
+}
+
+impl IndexMut<usize> for VX4s {
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.0[i]
+    }
+}
 
 impl VX4s {
     const BLOCK_SIZE: usize = 16;
